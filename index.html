@@ -1,0 +1,676 @@
+¡Claro! Aquí tienes el código HTML completo para tu malla curricular interactiva. Este es el mismo código que hemos estado trabajando, con todas las funcionalidades (marcar materias, registrar profesor y calificación, progreso, modal de detalles con requisitos e información adicional, y la sección de documentos relacionados).
+
+Guarda este código en un archivo llamado `index.html` en la carpeta que crees para tu proyecto.
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malla Curricular Interactiva - Ingeniería en Sistemas Computacionales UTESA</title>
+    <!-- Enlace a Tailwind CSS CDN para estilos rápidos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Variables CSS para colores, facilitando la personalización */
+        :root {
+            --color-primary: #3b82f6; /* Blue */
+            --color-secondary: #1e40af; /* Darker Blue */
+            --color-accent: #10b981; /* Green */
+            --color-light: #f9fafb; /* Light Gray */
+            --color-dark-text: #1f2937; /* Dark Gray for text */
+            --color-medium-text: #4b5563; /* Medium Gray for text */
+            --color-light-bg: #ffffff; /* White background */
+            --color-lighter-bg: #f3f4f6; /* Lighter gray background */
+            --color-border: #e5e7eb; /* Light gray border */
+        }
+        
+        /* Estilos generales del cuerpo */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--color-lighter-bg); /* Fondo claro */
+            color: var(--color-dark-text);
+        }
+        
+        /* Estilos para las tarjetas de materia */
+        .materia-card {
+            transition: all 0.3s ease; /* Transición suave para efectos hover */
+            cursor: pointer; /* Cursor de puntero para indicar interactividad */
+            min-height: 120px; /* Altura mínima para consistencia */
+            background-color: var(--color-light-bg); /* Fondo blanco para las tarjetas */
+            border: 1px solid var(--color-border); /* Borde sutil */
+            position: relative; /* Necesario para posicionar el checkbox absolutamente */
+        }
+        
+        .materia-card:hover {
+            transform: translateY(-5px) scale(1.02); /* Efecto de elevación y ligero aumento al pasar el ratón */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08); /* Sombra más ligera al pasar el ratón */
+        }
+
+        /* Estilo para materias aprobadas */
+        .materia-card.aprobada {
+            background-color: #e6fffa; /* Verde claro para materias aprobadas */
+            border-color: #81e6d9; /* Borde verde */
+        }
+        
+        /* Altura mínima para las columnas de semestre */
+        .semestre-columna {
+            min-height: 100px;
+        }
+        
+        /* Estilos para el modal de detalles (oculto por defecto) */
+        .details-modal {
+            transition: all 0.3s ease; /* Transición suave para la aparición del modal */
+            transform: scale(0.95); /* Empieza ligeramente más pequeño */
+            opacity: 0; /* Invisible por defecto */
+            pointer-events: none; /* No interactuable cuando está oculto */
+        }
+        
+        /* Estilos para el modal de detalles (activo/visible) */
+        .details-modal.active {
+            transform: scale(1); /* Vuelve a su tamaño normal */
+            opacity: 1; /* Visible */
+            pointer-events: all; /* Interactuable */
+        }
+        
+        /* Media queries para responsividad en pantallas pequeñas */
+        @media (max-width: 768px) {
+            .semestre-columna {
+                width: 100%; /* Ocupa todo el ancho en pantallas pequeñas */
+                margin-bottom: 2rem; /* Espacio entre columnas */
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen py-8 px-4">
+    <div class="max-w-6xl mx-auto">
+        <!-- Encabezado de la página -->
+        <header class="text-center mb-12">
+            <!-- Logo de la universidad (imagen de ejemplo) -->
+            <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/d737675a-e7cc-4577-9169-2db9122abb2e.png" alt="Logo de la universidad con diseño moderno, nombre de la institución y facultad en tipografía profesional" class="mx-auto mb-6 rounded-lg shadow-md" />
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">Malla Curricular Interactiva</h1>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">Ingeniería en Sistemas Computacionales - UTESA</p>
+        </header>
+        
+        <!-- Sección de título de carrera y filtro -->
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-semibold text-gray-800">Tu carrera: <span class="text-blue-600">Ingeniería en Sistemas Computacionales</span></h2>
+            <div class="relative">
+                <!-- Botón de filtro -->
+                <button id="filter-btn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center text-gray-700">
+                    <span>Filtrar</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <!-- Menú desplegable de filtro (oculto por defecto) -->
+                <div id="filter-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 hidden border border-gray-200">
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-filter="all">Todas las materias</a>
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-filter="basica">Área Básica</a>
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-filter="profesional">Área Profesional</a>
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-filter="titulacion">Titulación</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contenedor de los semestres (se llenará dinámicamente con JavaScript) -->
+        <div class="overflow-x-auto pb-4 mb-8">
+            <div class="flex space-x-6" id="semestres-container">
+                <!-- Semestres se generan dinámicamente aquí -->
+            </div>
+        </div>
+        
+        <!-- Sección de resumen y progreso -->
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-8">
+            <!-- Tarjeta de resumen de créditos -->
+            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                <h3 class="font-semibold text-lg mb-2 text-gray-800">Resumen de créditos</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Total de Créditos:</span>
+                        <span class="font-medium">245</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Total de Cuatrimestres:</span>
+                        <span class="font-medium">12</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Horas Teóricas:</span>
+                        <span class="font-medium">3180</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Horas Prácticas:</span>
+                        <span class="font-medium">1680</span>
+                    </div>
+                    <div class="border-t border-gray-200 mt-3 pt-3 flex justify-between items-center font-semibold">
+                        <span class="text-gray-800">Total de Horas:</span>
+                        <span class="text-blue-600">4860</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tarjeta de progreso actual -->
+            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                <h3 class="font-semibold text-lg mb-2 text-gray-800">Progreso actual</h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-gray-600 text-sm">General</span>
+                            <span id="progress-percentage" class="text-gray-600 text-sm">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="progress-bar" class="bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-gray-600 text-sm">Créditos Aprobados</span>
+                            <span id="approved-credits" class="text-gray-600 text-sm">0 / 245</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="approved-credits-bar" class="bg-green-500 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tarjeta de próximos requisitos (ejemplo estático, se puede hacer dinámico con JS) -->
+            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                <h3 class="font-semibold text-lg mb-2 text-gray-800">Próximos requisitos</h3>
+                <ul id="next-requirements" class="space-y-2">
+                    <li class="flex items-center">
+                        <div class="bg-blue-100 p-1 rounded-full mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <span class="text-gray-700">LENGUA ESPAÑOLA I (1er Cuatrimestre)</span>
+                    </li>
+                    <li class="flex items-center">
+                        <div class="bg-blue-100 p-1 rounded-full mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <span class="text-gray-700">ALGORITMOS COMPUTACIONALES (1er Cuatrimestre)</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Tarjeta de consejero académico (ejemplo estático) -->
+            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                <h3 class="font-semibold text-lg mb-2 text-gray-800">Consejero académico</h3>
+                <div class="flex items-center">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/616dd6d2-fc19-4a8e-96a7-b14b72067958.png" alt="Retrato del consejero académico, hombre profesional con camisa y corbata, sonriendo" class="w-12 h-12 rounded-full mr-3" />
+                    <div>
+                        <p class="font-medium">Dr. Carlos Mendez</p>
+                        <p class="text-gray-600 text-sm">Profesor Titular</p>
+                        <a href="#" class="text-blue-600 text-sm inline-block mt-1">Contactar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal de detalles de la materia (oculto por defecto) -->
+        <div id="materia-details" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 details-modal">
+            <div class="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-lg">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 id="modal-title" class="text-2xl font-bold text-gray-800"></h3>
+                            <div class="flex items-center mt-1 space-x-2">
+                                <span id="modal-codigo" class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm"></span>
+                                <span id="modal-creditos" class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm"></span>
+                                <span id="modal-area" class="px-2 py-1 bg-green-100 text-green-700 rounded text-sm"></span>
+                            </div>
+                        </div>
+                        <button id="close-modal" class="text-gray-400 hover:text-gray-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="border-t border-b border-gray-200 py-4 my-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">Descripción</h4>
+                        <p id="modal-descripcion" class="text-gray-700"></p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-2">Requisitos</h4>
+                            <ul id="modal-requisitos" class="space-y-2 text-gray-700"></ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-2">Información adicional</h4>
+                            <ul id="modal-info" class="space-y-2 text-gray-700">
+                                <li><span class="font-medium">Horas Teóricas (HT):</span> <span id="modal-ht"></span></li>
+                                <li><span class="font-medium">Horas Prácticas (HP):</span> <span id="modal-hp"></span></li>
+                                <li><span class="font-medium">Total Horas (TH):</span> <span id="modal-th"></span></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Sección de progreso personal (marcar aprobada, profesor, calificación) -->
+                    <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <h4 class="font-semibold text-lg text-gray-800 mb-3">Mi Progreso</h4>
+                        <div class="flex items-center mb-4">
+                            <input type="checkbox" id="modal-aprobada" class="h-5 w-5 text-blue-600 rounded focus:ring-blue-500 mr-2">
+                            <label for="modal-aprobada" class="text-gray-700 font-medium">Marcar como Aprobada</label>
+                        </div>
+                        <div class="mb-4">
+                            <label for="modal-profesor" class="block text-sm font-medium text-gray-700 mb-1">Profesor:</label>
+                            <input type="text" id="modal-profesor" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2" placeholder="Nombre del profesor">
+                        </div>
+                        <div>
+                            <label for="modal-calificacion" class="block text-sm font-medium text-gray-700 mb-1">Calificación:</label>
+                            <input type="text" id="modal-calificacion" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2" placeholder="Ej: A, B+, 95">
+                        </div>
+                    </div>
+                    
+                    <!-- Sección de documentos relacionados (ejemplo estático) -->
+                    <div class="mt-6">
+                        <h4 class="font-semibold text-gray-800 mb-2">Documentos relacionados</h4>
+                        <div class="flex space-x-4">
+                            <a href="#" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium inline-flex items-center text-gray-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Programa de estudios
+                            </a>
+                            <a href="#" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium inline-flex items-center text-gray-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                Descargar syllabus
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script JavaScript para la lógica interactiva -->
+    <script>
+        // Objeto 'materias' con toda la información del pensum
+        const materias = {
+            "PRIMER CUATRIMESTRE": [
+                { clave: "ESP-181", nombre: "LENGUA ESPAÑOLA I", ht: 60, hp: 0, th: 60, cred: 4, prerrequisitos: ["Ninguno"], area: "basica", descripcion: "Desarrollo de habilidades de comunicación oral y escrita en español." },
+                { clave: "INF-117", nombre: "ALGORITMOS COMPUTACIONALES", ht: 30, hp: 60, th: 90, cred: 4, prerrequisitos: ["Ninguno"], area: "profesional", descripcion: "Introducción a la lógica de programación y diseño de algoritmos." },
+                { clave: "ING-105", nombre: "INGLÉS I", ht: 60, hp: 0, th: 60, cred: 0, prerrequisitos: ["Ninguno"], area: "basica", descripcion: "Fundamentos del idioma inglés." },
+                { clave: "MAT-115", nombre: "MATEMÁTICAS DISCRETAS", ht: 60, hp: 0, th: 60, cred: 4, prerrequisitos: ["Ninguno"], area: "basica", descripcion: "Estudio de estructuras discretas relevantes para la computación." },
+                { clave: "MAT-160", nombre: "PRECÁLCULO", ht: 60, hp: 0, th: 60, cred: 4, prerrequisitos: ["Ninguno"], area: "basica", descripcion: "Preparación para el estudio del cálculo, incluyendo funciones y álgebra." },
+                { clave: "MED-750", nombre: "QUÍMICA INORGÁNICA I", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["CO-REQ. MED-755"], area: "basica", descripcion: "Principios de química inorgánica." },
+                { clave: "MED-755", nombre: "LABORATORIO DE QUÍMICA INORGÁNICA I", ht: 0, hp: 30, th: 30, cred: 1, prerrequisitos: ["CO-REQ. MED-750"], area: "basica", descripcion: "Prácticas de laboratorio de química inorgánica." },
+                { clave: "ORI-112", nombre: "ORIENTACIÓN UNIVERSITARIA", ht: 30, hp: 0, th: 30, cred: 2, prerrequisitos: ["Ninguno"], area: "basica", descripcion: "Introducción a la vida universitaria y métodos de estudio." },
+                { clave: "SOC-182", nombre: "REFLEXIÓN FILOSÓFICA", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["Ninguno"], area: "basica", descripcion: "Análisis de conceptos filosóficos fundamentales." }
+            ],
+            "SEGUNDO CUATRIMESTRE": [
+                { clave: "ESP-189", nombre: "LENGUA ESPAÑOLA II", ht: 60, hp: 0, th: 60, cred: 4, prerrequisitos: ["ESP-181"], area: "basica", descripcion: "Continuación del desarrollo de habilidades lingüísticas en español." },
+                { clave: "INF-164", nombre: "PROGRAMACIÓN I", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["INF-117", "MAT-115", "CO-REQ. INF-165"], area: "profesional", descripcion: "Introducción a la programación estructurada." },
+                { clave: "INF-165", nombre: "LABORATORIO DE PROGRAMACIÓN I", ht: 0, hp: 30, th: 30, cred: 1, prerrequisitos: ["INF-117", "MAT-115", "CO-REQ. INF-164"], area: "profesional", descripcion: "Prácticas de laboratorio de programación estructurada." },
+                { clave: "INF-204", nombre: "LÓGICA COMPUTACIONAL", ht: 30, hp: 60, th: 90, cred: 4, prerrequisitos: ["MAT-115", "INF-117"], area: "profesional", descripcion: "Estudio de la lógica aplicada a la computación." },
+                { clave: "ING-115", nombre: "INGLÉS II", ht: 60, hp: 0, th: 60, cred: 0, prerrequisitos: ["ING-105"], area: "basica", descripcion: "Continuación del estudio del idioma inglés." },
+                { clave: "MAT-170", nombre: "CÁLCULO I", ht: 60, hp: 0, th: 60, cred: 4, prerrequisitos: ["MAT-160"], area: "basica", descripcion: "Introducción al cálculo diferencial." },
+                { clave: "MAT-190", nombre: "FÍSICA I", ht: 60, hp: 0, th: 60, cred: 4, prerrequisitos: ["MAT-160", "CO-REQ. MAT-191"], area: "basica", descripcion: "Fundamentos de física clásica." },
+                { clave: "MAT-191", nombre: "LABORATORIO DE FÍSICA I", ht: 0, hp: 30, th: 30, cred: 1, prerrequisitos: ["MAT-160", "CO-REQ. MAT-190"], area: "basica", descripcion: "Prácticas de laboratorio de física." }
+            ],
+            "TERCER CUATRIMESTRE": [
+                { clave: "ESP-302", nombre: "REDACCIÓN PROFESIONAL", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["ESP-189"], area: "basica", descripcion: "Desarrollo de habilidades de redacción para el ámbito profesional." },
+                { clave: "INF-121", nombre: "ANÁLISIS DE SISTEMAS", ht: 60, hp: 0, th: 60, cred: 4, prerrequisitos: ["INF-164", "INF-165"], area: "profesional", descripcion: "Metodologías para el análisis de sistemas de información." },
+                { clave: "INF-167", nombre: "PROGRAMACIÓN II (ORIENTADA A OBJETO)", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["INF-164", "INF-165", "CO-REQ. INF168"], area: "profesional", descripcion: "Conceptos avanzados de programación orientada a objetos." },
+                { clave: "INF-168", nombre: "LABORATORIO DE PROGRAMACIÓN II", ht: 0, hp: 30, th: 30, cred: 1, prerrequisitos: ["INF-164", "INF-165", "CO-REQ. INF167"], area: "profesional", descripcion: "Prácticas de laboratorio de programación orientada a objetos." },
+                { clave: "ING-125", nombre: "INGLÉS III", ht: 60, hp: 0, th: 60, cred: 0, prerrequisitos: ["ING-115"], area: "basica", descripcion: "Nivel intermedio de inglés." },
+                { clave: "MAT-306", nombre: "PENSAMIENTO LÓGICO", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["MAT-160", "SOC-182"], area: "basica", descripcion: "Desarrollo del razonamiento lógico." },
+                { clave: "MAT-340", nombre: "CÁLCULO II", ht: 60, hp: 0, th: 60, cred: 4, prerrequisitos: ["MAT-170"], area: "basica", descripcion: "Cálculo integral y sus aplicaciones." },
+                { clave: "MAT-500", nombre: "FÍSICA II", ht: 60, hp: 0, th: 60, cred: 4, prerrequisitos: ["MAT-190", "MAT-191", "CO-REQ. MAT-501"], area: "basica", descripcion: "Electricidad y magnetismo." },
+                { clave: "MAT-501", nombre: "LABORATORIO DE FÍSICA II", ht: 0, hp: 30, th: 30, cred: 1, prerrequisitos: ["MAT-190", "MAT-191", "CO-REQ. MAT-500"], area: "basica", descripcion: "Prácticas de laboratorio de electricidad y magnetismo." },
+                { clave: "SOC-114", nombre: "METODOLOGIA DE LA INVESTIGACIÓN I", ht: 30, hp: 30, th: 60, cred: 3, prerrequisitos: ["Ninguno"], area: "basica", descripcion: "Introducción a los métodos de investigación científica." }
+            ],
+            "CUARTO CUATRIMESTRE": [
+                { clave: "IEL-100", nombre: "ELECTRICIDAD BÁSICA", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["MAT-500", "MAT-501", "Co-Req. IEL-105"], area: "basica", descripcion: "Fundamentos de circuitos eléctricos." },
+                { clave: "IEL-105", nombre: "TALLER DE ELECTRICIDAD BÁSICA", ht: 0, hp: 30, th: 30, cred: 1, prerrequisitos: ["MAT-500", "MAT-501", "Co-Req. IEL-100"], area: "basica", descripcion: "Prácticas de taller de electricidad." },
+                { clave: "INF-171", nombre: "DISEÑO DE SISTEMAS", ht: 60, hp: 0, th: 60, cred: 4, prerrequisitos: ["INF-121", "INF-167", "INF-168"], area: "profesional", descripcion: "Metodologías para el diseño de sistemas de información." },
+                { clave: "INF-172", nombre: "PROGRAMACIÓN III (ORIENTADA A OBJETO)", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["INF-121", "INF-167", "INF-168", "Co-Req. INF-173"], area: "profesional", descripcion: "Programación avanzada con enfoque en objetos." },
+                { clave: "INF-173", nombre: "LABORATORIO DE PROGRAMACIÓN III", ht: 0, hp: 30, th: 30, cred: 1, prerrequisitos: ["INF-121", "INF-167", "INF-168", "Co-Req. INF-172"], area: "profesional", descripcion: "Prácticas de laboratorio de programación avanzada." },
+                { clave: "INF-385", nombre: "BASE DE DATOS I", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["INF-121", "INF-167", "INF-168", "Co-Req. INF-387"], area: "profesional", descripcion: "Introducción a los sistemas de gestión de bases de datos." },
+                { clave: "INF-387", nombre: "LABORATORIO DE BASE DE DATOS I", ht: 0, hp: 30, th: 30, cred: 1, prerrequisitos: ["INF-121", "INF-167", "INF-168", "Co-Req. INF-385"], area: "profesional", descripcion: "Prácticas de laboratorio de bases de datos." },
+                { clave: "ING-135", nombre: "INGLÉS IV", ht: 60, hp: 0, th: 60, cred: 0, prerrequisitos: ["ING-125"], area: "basica", descripcion: "Nivel avanzado de inglés." },
+                { clave: "MAT-134", nombre: "FUNDAMENTOS DE ESTADÍSTICA", ht: 15, hp: 30, th: 45, cred: 2, prerrequisitos: ["MAT-160"], area: "basica", descripcion: "Conceptos básicos de estadística." },
+                { clave: "MAT-350", nombre: "CÁLCULO III", ht: 60, hp: 0, th: 60, cred: 4, prerrequisitos: ["MAT-340"], area: "basica", descripcion: "Cálculo multivariable." },
+                { clave: "SOC-118", nombre: "METODOLOGÍA DE LA INVESTIGACIÓN II", ht: 30, hp: 30, th: 60, cred: 3, prerrequisitos: ["SOC-118", "CO-REQ.MAT-134"], area: "basica", descripcion: "Continuación de los métodos de investigación." },
+                { clave: "SOC-172", nombre: "DEBATES DE HISTORIA DOMINICANA", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["Ninguno"], area: "basica", descripcion: "Análisis de eventos históricos dominicanos." }
+            ],
+            "QUINTO CUATRIMESTRE": [
+                { clave: "DIB-520", nombre: "DIBUJO TÉCNICO", ht: 45, hp: 30, th: 75, cred: 4, prerrequisitos: ["Ninguno"], area: "basica", descripcion: "Principios y técnicas de dibujo técnico." },
+                { clave: "IID-420", nombre: "SEGURIDAD E HIGIENE INDUSTRIAL", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["Ninguno"], area: "basica", descripcion: "Normas y prácticas de seguridad en entornos industriales." },
+                { clave: "INF-440", nombre: "ARQUITECTURA COMPUTACIONAL", ht: 15, hp: 0, th: 15, cred: 1, prerrequisitos: ["INF-204", "IEL-100", "IEL-105", "Co-Req. INF-445"], area: "profesional", descripcion: "Estructura y organización de los sistemas computacionales." },
+                { clave: "INF-445", nombre: "LABORATORIO ARQUITECTURA COMPUTACIONAL", ht: 0, hp: 60, th: 60, cred: 2, prerrequisitos: ["INF-204", "IEL-100", "IEL-105", "Co-Req, INF-440"], area: "profesional", descripcion: "Prácticas de laboratorio de arquitectura computacional." },
+                { clave: "INF-481", nombre: "BASE DE DATOS II", ht: 30, hp: 0, th: 30, cred: 2, prerrequisitos: ["INF-171", "INF-385", "INF-387", "Co-Req. INF-482"], area: "profesional", descripcion: "Conceptos avanzados de bases de datos." },
+                { clave: "INF-482", nombre: "LABORATORIO DE BASE DE DATOS II", ht: 0, hp: 30, th: 30, cred: 1, prerrequisitos: ["INF-171", "INF-385", "INF-387", "Co-Req. INF-481"], area: "profesional", descripcion: "Prácticas de laboratorio de bases de datos avanzadas." },
+                { clave: "INF-535", nombre: "DISEÑO Y PROGRAMACIÓN DE PÁGINAS WEB", ht: 15, hp: 60, th: 75, cred: 3, prerrequisitos: ["INF-171", "INF-385", "INF-387"], area: "profesional", descripcion: "Desarrollo de aplicaciones web." },
+                { clave: "MAT-360", nombre: "CÁLCULO IV", ht: 60, hp: 0, th: 60, cred: 4, prerrequisitos: ["MAT-350"], area: "basica", descripcion: "Ecuaciones diferenciales y series de Fourier." },
+                { clave: "SOC-502", nombre: "CIUDADANÍA Y GLOBALIZACIÓN", ht: 30, hp: 0, th: 30, cred: 2, prerrequisitos: ["Ninguno"], area: "basica", descripcion: "Análisis de la ciudadanía en un contexto global." }
+            ],
+            "SEXTO CUATRIMESTRE": [
+                { clave: "INF-184", nombre: "SISTEMAS OPERATIVOS", ht: 30, hp: 0, th: 30, cred: 2, prerrequisitos: ["INF-440", "INF-445", "Co-Req. INF-185"], area: "profesional", descripcion: "Funcionamiento y gestión de sistemas operativos." },
+                { clave: "INF-185", nombre: "LABORATORIO DE SISTEMAS OPERATIVOS", ht: 0, hp: 30, th: 30, cred: 1, prerrequisitos: ["INF-440", "INF-445", "Co-Req. INF-184"], area: "profesional", descripcion: "Prácticas de laboratorio de sistemas operativos." },
+                { clave: "INF-217", nombre: "ALGORITMOS Y ESTRUCTURAS DE DATOS", ht: 30, hp: 0, th: 30, cred: 2, prerrequisitos: ["INF-172", "INF-173", "Co-Req. INF-218"], area: "profesional", descripcion: "Diseño y análisis de algoritmos y estructuras de datos." },
+                { clave: "INF-218", nombre: "LABORATORIO DE ALGORITMOS Y ESTRUCTURAS DE DATOS", ht: 0, hp: 30, th: 30, cred: 1, prerrequisitos: ["INF-172", "INF-173", "Co-Req. INF-217"], area: "profesional", descripcion: "Prácticas de laboratorio de algoritmos y estructuras de datos." },
+                { clave: "INF-225", nombre: "PROYECTO INTEGRADOR I", ht: 30, hp: 90, th: 120, cred: 5, prerrequisitos: ["Aprobar todas las asignaturas hasta el 5.to Cuatrimestre."], area: "profesional", descripcion: "Desarrollo de un proyecto de software integrado." },
+                { clave: "INF-331", nombre: "SEMINARIO DE INFORMÁTICA", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["Aprobar todas las asignaturas hasta el 5.to Cuatrimestre."], area: "profesional", descripcion: "Temas actuales y avanzados en informática." },
+                { clave: "INF-640", nombre: "MINERÍA DE DATOS", ht: 30, hp: 30, th: 60, cred: 3, prerrequisitos: ["INF-481", "INF-482"], area: "profesional", descripcion: "Técnicas y herramientas para el descubrimiento de patrones en grandes volúmenes de datos." },
+                { clave: "ING-168", nombre: "INGLÉS PROFESIONAL", ht: 60, hp: 0, th: 60, cred: 0, prerrequisitos: ["ING-135"], area: "basica", descripcion: "Inglés enfocado en el ámbito profesional." },
+                { clave: "MAT-135", nombre: "ESTADÍSTICA PARA INGENIEROS I", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["MAT-134"], area: "basica", descripcion: "Aplicaciones de la estadística en ingeniería." },
+                { clave: "SOC-160", nombre: "ÉTICA PROFESIONAL", ht: 30, hp: 0, th: 30, cred: 2, prerrequisitos: ["Ninguno"], area: "basica", descripcion: "Principios éticos en el ejercicio profesional." }
+            ],
+            "SÉPTIMO CUATRIMESTRE": [
+                { clave: "INF-502", nombre: "INTELIGENCIA ARTIFICIAL", ht: 30, hp: 0, th: 30, cred: 2, prerrequisitos: ["INF-217", "INF-218", "Co-Req. INF-503"], area: "profesional", descripcion: "Introducción a los conceptos y técnicas de inteligencia artificial." },
+                { clave: "INF-503", nombre: "LABORATORIO INTELIGENCIA ARTIFICIAL", ht: 0, hp: 60, th: 60, cred: 2, prerrequisitos: ["INF-217", "INF-218", "Co-Req. INF-502"], area: "profesional", descripcion: "Prácticas de laboratorio de inteligencia artificial." },
+                { clave: "INF-700", nombre: "COMPUTACIÓN GRÁFICA", ht: 15, hp: 60, th: 75, cred: 3, prerrequisitos: ["INF-440", "INF-445", "INF-184", "INF-185"], area: "profesional", descripcion: "Fundamentos de gráficos por computadora." },
+                { clave: "INF-705", nombre: "MÉTODOS NUMÉRICOS", ht: 30, hp: 0, th: 30, cred: 2, prerrequisitos: ["MAT-360", "Co-Req. INF-706"], area: "profesional", descripcion: "Técnicas numéricas para la resolución de problemas matemáticos." },
+                { clave: "INF-706", nombre: "LABORATORIO MÉTODOS NUMÉRICOS", ht: 0, hp: 60, th: 60, cred: 2, prerrequisitos: ["MAT-360", "Co-Req. INF-705"], area: "profesional", descripcion: "Prácticas de laboratorio de métodos numéricos." },
+                { clave: "INF-710", nombre: "METODOLOGÍA ÁGIL", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["INF-167", "INF-168"], area: "profesional", descripcion: "Metodologías ágiles para el desarrollo de software." },
+                { clave: "MAT-145", nombre: "ESTADÍSTICA PARA INGENIEROS II", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["MAT-135"], area: "basica", descripcion: "Estadística inferencial y aplicaciones en ingeniería." },
+                { clave: "SIC-766", nombre: "INTELIGENCIA EMOCIONAL", ht: 15, hp: 30, th: 45, cred: 2, prerrequisitos: ["Ninguno"], area: "basica", descripcion: "Desarrollo de habilidades de inteligencia emocional." },
+                { clave: "SOC-155", nombre: "MEDIO AMBIENTE Y SOSTENIBILIDAD", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["Ninguno"], area: "basica", descripcion: "Estudio de la relación entre el ser humano y el medio ambiente." }
+            ],
+            "OCTAVO CUATRIMESTRE": [
+                { clave: "ECO-525", nombre: "FINANZAS PERSONALES", ht: 30, hp: 0, th: 30, cred: 2, prerrequisitos: ["Ninguno"], area: "basica", descripcion: "Gestión de finanzas personales." },
+                { clave: "IID-725", nombre: "INVESTIGACIÓN OPERATIVA I", ht: 30, hp: 30, th: 60, cred: 3, prerrequisitos: ["MAT-360"], area: "profesional", descripcion: "Modelos y técnicas de optimización." },
+                { clave: "INF-241", nombre: "INGENIERÍA DE SOFTWARE I", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["INF-225"], area: "profesional", descripcion: "Principios y prácticas de ingeniería de software." },
+                { clave: "INF-810", nombre: "AUDITORÍA DE SISTEMAS INFORMÁTICOS", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["INF-225"], area: "profesional", descripcion: "Procesos y técnicas de auditoría de sistemas." },
+                { clave: "INF-840", nombre: "PROGRAMACIÓN DE DISPOSITIVOS MÓVILES", ht: 15, hp: 60, th: 75, cred: 3, prerrequisitos: ["INF-535", "INF-700"], area: "profesional", descripcion: "Desarrollo de aplicaciones para plataformas móviles." },
+                { clave: "PASANTÍA", nombre: "PASANTÍA", ht: 0, hp: 240, th: 240, cred: 0, prerrequisitos: ["Haber aprobado todas las asignaturas incluyendo las del 7.mo Cuatrimestre."], area: "titulacion", descripcion: "Experiencia práctica en un entorno profesional." }
+            ],
+            "NOVENO CUATRIMESTRE": [
+                { clave: "ADM-910", nombre: "LIDERAZGO Y DESEMPEÑO", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["Ninguno"], area: "basica", descripcion: "Desarrollo de habilidades de liderazgo y gestión de equipos." },
+                { clave: "IID-830", nombre: "INVESTIGACIÓN DE OPERATIVA II", ht: 30, hp: 30, th: 60, cred: 3, prerrequisitos: ["IID-725"], area: "profesional", descripcion: "Modelos avanzados de investigación operativa." },
+                { clave: "INF-021", nombre: "GESTIÓN DE PROYECTO INFORMÁTICO", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["INF-241"], area: "profesional", descripcion: "Metodologías para la gestión de proyectos de software." },
+                { clave: "INF-411", nombre: "REDES Y COMUNICACIONES", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["INF-440", "INF-445", "INF-184", "INF-185", "Co-Req. INF-412"], area: "profesional", descripcion: "Principios de redes de computadoras y comunicación de datos." },
+                { clave: "INF-412", nombre: "LABORATORIO DE REDES Y COMUNICACIONES", ht: 0, hp: 30, th: 30, cred: 1, prerrequisitos: ["INF-440", "INF-445", "INF-184", "INF-185", "Co-Req. INF-411"], area: "profesional", descripcion: "Prácticas de laboratorio de redes y comunicaciones." },
+                { clave: "INF-450", nombre: "INGENIERÍA DE SOFTWARE II", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["INF-241"], area: "profesional", descripcion: "Diseño y arquitectura de software." },
+                { clave: "INF-910", nombre: "PROGRAMACIÓN DE VIDEOJUEGOS", ht: 15, hp: 60, th: 75, cred: 3, prerrequisitos: ["INF-700"], area: "profesional", descripcion: "Desarrollo de videojuegos." },
+                { clave: "ELECTIVA", nombre: "ELECTIVA", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["Ninguno"], area: "profesional", descripcion: "Asignatura a elegir de una lista de opciones." }
+            ],
+            "DÉCIMO CUATRIMESTRE": [
+                { clave: "ADM-900", nombre: "FORMACIÓN DE EMPRENDEDORES", ht: 30, hp: 30, th: 60, cred: 3, prerrequisitos: ["Haber aprobado todas las asignaturas del 1.er al 9.no Cuatrimestre, incluido."], area: "basica", descripcion: "Desarrollo de habilidades para el emprendimiento." },
+                { clave: "IID-945", nombre: "INGENIERÍA ECONÓMICA", ht: 30, hp: 30, th: 60, cred: 3, prerrequisitos: ["MAT-360"], area: "profesional", descripcion: "Análisis económico de proyectos de ingeniería." },
+                { clave: "INF-344", nombre: "TELECOMUNICACIÓN DE DATOS", ht: 30, hp: 0, th: 30, cred: 2, prerrequisitos: ["INF-411", "INF-412", "Co-Req. INF-345"], area: "profesional", descripcion: "Principios y tecnologías de telecomunicación de datos." },
+                { clave: "INF-345", nombre: "LABORATORIO DE TELECOMUNICACIÓN DE DATOS", ht: 0, hp: 30, th: 30, cred: 1, prerrequisitos: ["INF-411", "INF-412", "Co-Req. INF-344"], area: "profesional", descripcion: "Prácticas de laboratorio de telecomunicación de datos." },
+                { clave: "INF-433", nombre: "ASEGURAMIENTO DE CALIDAD DEL SOFTWARE", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["INF-450"], area: "profesional", descripcion: "Procesos y técnicas para asegurar la calidad del software." },
+                { clave: "INF-920", nombre: "COMPILADORES", ht: 30, hp: 60, th: 90, cred: 4, prerrequisitos: ["INF-502", "INF-503", "INF-184", "INF-185"], area: "profesional", descripcion: "Diseño e implementación de compiladores." },
+                { clave: "ELECTIVA", nombre: "ELECTIVA", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["Ninguno"], area: "profesional", descripcion: "Asignatura a elegir de una lista de opciones." }
+            ],
+            "DÉCIMO PRIMER CUATRIMESTRE": [
+                { clave: "DPG-010", nombre: "ANTEPROYECTO DE GRADO", ht: 60, hp: 0, th: 60, cred: 4, prerrequisitos: ["ADM-900"], area: "titulacion", descripcion: "Elaboración del anteproyecto para el trabajo de grado." },
+                { clave: "IID-025", nombre: "DISEÑO Y EVALUACIÓN DE PROYECTOS", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["IID-945"], area: "profesional", descripcion: "Metodologías para el diseño y evaluación de proyectos." },
+                { clave: "INF-025", nombre: "ALGORITMOS PARALELOS", ht: 15, hp: 60, th: 75, cred: 3, prerrequisitos: ["INF-705", "INF-706"], area: "profesional", descripcion: "Diseño y análisis de algoritmos para procesamiento paralelo." },
+                { clave: "INF-820", nombre: "SEGURIDAD INFORMÁTICA", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["INF-344", "INF-345"], area: "profesional", descripcion: "Principios y técnicas de seguridad en sistemas informáticos." },
+                { clave: "ELECTIVA", nombre: "ELECTIVA", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["Ninguno"], area: "profesional", descripcion: "Asignatura a elegir de una lista de opciones." }
+            ],
+            "DÉCIMO SEGUNDO CUATRIMESTRE": [
+                { clave: "DPG-020", nombre: "PROYECTO DE GRADO", ht: 45, hp: 90, th: 135, cred: 6, prerrequisitos: ["Haber aprobado todas las asignaturas hasta el 11.mo Cuatrimestre."], area: "titulacion", descripcion: "Desarrollo y defensa del proyecto de grado." }
+            ],
+            "ELECTIVAS": [
+                { clave: "CON-118", nombre: "CONTABILIDAD I", ht: 30, hp: 30, th: 60, cred: 3, prerrequisitos: ["Ninguno"], area: "basica", descripcion: "Principios básicos de contabilidad." },
+                { clave: "IEL-200", nombre: "CIRCUITOS ELÉCTRICOS I", ht: 45, hp: 0, th: 45, cred: 4, prerrequisitos: ["IEL-100", "IEL-105", "Co-Req. IEL-205"], area: "profesional", descripcion: "Análisis de circuitos eléctricos." },
+                { clave: "IEL-205", nombre: "TALLER DE CIRCUITOS ELÉCTRICOS I", ht: 0, hp: 30, th: 32, cred: 1, prerrequisitos: ["IEL-100", "IEL-105", "Co-Req. IEL-200"], area: "profesional", descripcion: "Prácticas de taller de circuitos eléctricos." },
+                { clave: "INF-022", nombre: "SISTEMA Y TECNOLOGÍA DE INFORMACIÓN", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["INF-385", "INF-387"], area: "profesional", descripcion: "Conceptos de sistemas y tecnologías de información." },
+                { clave: "INF-023", nombre: "DOMÓTICA Y ENTORNO INTELIGENTE", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["INF-344", "INF-345"], area: "profesional", descripcion: "Introducción a la domótica y entornos inteligentes." },
+                { clave: "INF-024", nombre: "ADMINISTRACIÓN DE NEGOCIOS ELECTRÓNICOS", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["INF-225"], area: "profesional", descripcion: "Gestión de negocios en el ámbito electrónico." },
+                { clave: "INF-026", nombre: "ROBÓTICA", ht: 15, hp: 60, th: 75, cred: 3, prerrequisitos: ["INF-344", "INF-345"], area: "profesional", descripcion: "Fundamentos de robótica." },
+                { clave: "INF-027", nombre: "BLOCKCHAIN, CRIPTOMONEDAS Y METAVERSO", ht: 45, hp: 0, th: 45, cred: 3, prerrequisitos: ["INF-411", "INF-412"], area: "profesional", descripcion: "Conceptos de blockchain, criptomonedas y metaverso." }
+            ]
+        };
+
+        const TOTAL_CREDITOS_CARRERA = 245; // Total de créditos de la carrera según tu pensum
+
+        // Cargar el estado de las materias desde localStorage (para guardar el progreso del usuario)
+        let materiasEstado = JSON.parse(localStorage.getItem('materiasEstadoUTESA')) || {};
+
+        // Función para guardar el estado actual de las materias en localStorage
+        function guardarEstado() {
+            localStorage.setItem('materiasEstadoUTESA', JSON.stringify(materiasEstado));
+        }
+
+        // Función para renderizar (dibujar) los semestres y sus materias en la página
+        function renderSemestres() {
+            const container = document.getElementById('semestres-container');
+            container.innerHTML = ''; // Limpiar el contenedor antes de volver a dibujar
+
+            // Iterar sobre cada semestre definido en el objeto 'materias'
+            Object.keys(materias).forEach(semestreKey => {
+                if (semestreKey === "ELECTIVAS") return; // Excluir "ELECTIVAS" de la visualización principal de semestres
+
+                // Crear la columna para el semestre
+                const semestreCol = document.createElement('div');
+                semestreCol.className = 'flex-none w-64 semestre-columna'; // Clases de Tailwind para el diseño
+
+                // Crear el encabezado del semestre
+                const semestreHeader = document.createElement('div');
+                semestreHeader.className = 'bg-blue-600 text-white rounded-t-lg px-4 py-3 font-semibold text-center';
+                semestreHeader.textContent = semestreKey.replace("CUATRIMESTRE", " Cuatrimestre"); // Formatear el nombre del semestre
+
+                // Crear la lista de materias para este semestre
+                const materiasList = document.createElement('div');
+                materiasList.className = 'bg-white rounded-b-lg shadow-md divide-y divide-gray-100 p-4 border border-gray-200';
+                materiasList.id = `semestre-${semestreKey.toLowerCase().replace(/\s/g, '-')}`; // ID único para cada lista de materias
+
+                // Iterar sobre cada materia dentro del semestre actual
+                materias[semestreKey].forEach((materia) => {
+                    const materiaId = materia.clave;
+                    // Obtener el estado guardado de la materia (aprobada, profesor, calificación)
+                    const estado = materiasEstado[materiaId] || { aprobada: false, profesor: '', calificacion: '' };
+
+                    // Crear la tarjeta individual para la materia
+                    const materiaCard = document.createElement('div');
+                    materiaCard.className = `materia-card bg-white p-4 rounded-lg shadow-sm mb-3 group ${estado.aprobada ? 'aprobada' : ''}`;
+                    materiaCard.dataset.codigo = materia.clave;
+                    materiaCard.dataset.semestre = semestreKey;
+                    materiaCard.dataset.area = materia.area;
+
+                    // Determinar el color de la etiqueta de área según el tipo de materia
+                    const areaColor = {
+                        'basica': 'bg-blue-100 text-blue-800',
+                        'profesional': 'bg-green-100 text-green-800',
+                        'titulacion': 'bg-purple-100 text-purple-800'
+                    }[materia.area];
+
+                    // Contenido HTML de la tarjeta de materia
+                    materiaCard.innerHTML = `
+                        <h4 class="font-semibold text-gray-800 mb-1">${materia.nombre}</h4>
+                        <div class="flex items-center text-sm space-x-2 mb-2">
+                            <span class="${areaColor} px-2 py-1 rounded-full">${materia.area.replace(/^\w/, c => c.toUpperCase())}</span>
+                            <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full">${materia.cred} créditos</span>
+                        </div>
+                        ${estado.aprobada ? `<p class="text-xs text-gray-600">Profesor: ${estado.profesor || 'N/A'}</p><p class="text-xs text-gray-600">Calificación: ${estado.calificacion || 'N/A'}</p>` : ''}
+                        <input type="checkbox" class="absolute top-2 right-2 h-5 w-5 text-blue-600 rounded focus:ring-blue-500" data-materia-id="${materiaId}" ${estado.aprobada ? 'checked' : ''}>
+                    `;
+
+                    // Event listener para el checkbox de "aprobada"
+                    materiaCard.querySelector('input[type="checkbox"]').addEventListener('change', (event) => {
+                        event.stopPropagation(); // Evitar que el clic en el checkbox abra el modal
+                        const isChecked = event.target.checked;
+                        const materiaId = event.target.dataset.materiaId;
+
+                        // Inicializar el estado si no existe
+                        if (!materiasEstado[materiaId]) {
+                            materiasEstado[materiaId] = { aprobada: false, profesor: '', calificacion: '' };
+                        }
+                        materiasEstado[materiaId].aprobada = isChecked;
+
+                        // Si se desmarca, limpiar los campos de profesor y calificación
+                        if (!isChecked) {
+                            materiasEstado[materiaId].profesor = '';
+                            materiasEstado[materiaId].calificacion = '';
+                        }
+
+                        guardarEstado(); // Guardar el estado actualizado
+                        renderSemestres(); // Volver a dibujar para actualizar el estilo de la tarjeta
+                        updateProgress(); // Actualizar el progreso general
+                    });
+
+                    // Event listener para hacer clic en la tarjeta (excluyendo el checkbox)
+                    materiaCard.addEventListener('click', (event) => {
+                        if (!event.target.matches('input[type="checkbox"]')) {
+                            showMateriaDetails(materia); // Mostrar el modal de detalles
+                        }
+                    });
+
+                    materiasList.appendChild(materiaCard); // Añadir la tarjeta a la lista de materias
+                });
+
+                semestreCol.appendChild(semestreHeader); // Añadir el encabezado a la columna
+                semestreCol.appendChild(materiasList); // Añadir la lista de materias a la columna
+                container.appendChild(semestreCol); // Añadir la columna al contenedor principal
+            });
+        }
+
+        // Variable para almacenar la materia que se está viendo en el modal
+        let currentMateriaInModal = null;
+
+        // Función para mostrar el modal de detalles de una materia
+        function showMateriaDetails(materia) {
+            currentMateriaInModal = materia; // Guardar la materia actual
+            const modal = document.getElementById('materia-details');
+            const materiaId = materia.clave;
+            const estado = materiasEstado[materiaId] || { aprobada: false, profesor: '', calificacion: '' };
+
+            // Llenar el modal con la información de la materia
+            document.getElementById('modal-title').textContent = materia.nombre;
+            document.getElementById('modal-codigo').textContent = materia.clave;
+            document.getElementById('modal-creditos').textContent = materia.cred + ' créditos';
+            document.getElementById('modal-area').textContent = materia.area.replace(/^\w/, c => c.toUpperCase());
+            document.getElementById('modal-descripcion').textContent = materia.descripcion || "No hay descripción disponible.";
+
+            const requisitosList = document.getElementById('modal-requisitos');
+            requisitosList.innerHTML = ''; // Limpiar la lista de requisitos
+
+            // Mostrar los prerrequisitos de la materia
+            if (materia.prerrequisitos && materia.prerrequisitos.length > 0 && materia.prerrequisitos[0] !== "Ninguno") {
+                materia.prerrequisitos.forEach(req => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-center';
+                    li.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        ${req}
+                    `;
+                    requisitosList.appendChild(li);
+                });
+            } else {
+                requisitosList.innerHTML = '<li>No tiene requisitos específicos.</li>';
+            }
+
+            // Llenar la información adicional (horas)
+            document.getElementById('modal-ht').textContent = materia.ht + ' horas';
+            document.getElementById('modal-hp').textContent = materia.hp + ' horas';
+            document.getElementById('modal-th').textContent = materia.th + ' horas';
+
+            // Llenar los campos de progreso personal en el modal
+            document.getElementById('modal-aprobada').checked = estado.aprobada;
+            document.getElementById('modal-profesor').value = estado.profesor;
+            document.getElementById('modal-calificacion').value = estado.calificacion;
+
+            modal.classList.add('active'); // Mostrar el modal
+        }
+
+        // Función para actualizar el progreso personal de la materia en el modal
+        function updatePersonalProgress() {
+            if (!currentMateriaInModal) return; // Si no hay materia en el modal, salir
+
+            const materiaId = currentMateriaInModal.clave;
+            const isAprobada = document.getElementById('modal-aprobada').checked;
+            const profesor = document.getElementById('modal-profesor').value.trim();
+            const calificacion = document.getElementById('modal-calificacion').value.trim();
+
+            // Inicializar el estado si no existe
+            if (!materiasEstado[materiaId]) {
+                materiasEstado[materiaId] = {};
+            }
+            materiasEstado[materiaId].aprobada = isAprobada;
+            materiasEstado[materiaId].profesor = profesor;
+            materiasEstado[materiaId].calificacion = calificacion;
+
+            guardarEstado(); // Guardar el estado actualizado
+            renderSemestres(); // Volver a dibujar para actualizar el estilo de la tarjeta
+            updateProgress(); // Actualizar el progreso general
+        }
+
+        // Función para filtrar las materias por área
+        function filterMaterias(filter) {
+            document.querySelectorAll('.materia-card').forEach(card => {
+                if (filter === 'all' || card.dataset.area === filter) {
+                    card.style.display = 'block'; // Mostrar la tarjeta
+                } else {
+                    card.style.display = 'none'; // Ocultar la tarjeta
+                }
+            });
+        }
+
+        // Función para actualizar el progreso general de la carrera
+        function updateProgress() {
+            let creditosAprobados = 0;
+            // Recorrer todas las materias para contar los créditos aprobados
+            for (const semestreKey in materias) {
+                materias[semestreKey].forEach(materia => {
+                    const estado = materiasEstado[materia.clave];
+                    if (estado && estado.aprobada) {
+                        creditosAprobados += materia.cred;
+                    }
+                });
+            }
+
+            const percentage = (creditosAprobados / TOTAL_CREDITOS_CARRERA) * 100;
+
+            // Actualizar los elementos de la interfaz de usuario con el progreso
+            document.getElementById('approved-credits').textContent = `${creditosAprobados} / ${TOTAL_CREDITOS_CARRERA}`;
+            document.getElementById('progress-percentage').textContent = `${percentage.toFixed(2)}%`;
+            document.getElementById('progress-bar').style.width = `${percentage}%`;
+            document.getElementById('approved-credits-bar').style.width = `${percentage}%`;
+        }
+        
+        // Event listeners que se ejecutan cuando el DOM está completamente cargado
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSemestres(); // Dibujar los semestres al cargar la página
+            updateProgress(); // Actualizar el progreso inicial
+
+            // Event listeners para los campos del modal de progreso personal
+            document.getElementById('modal-aprobada').addEventListener('change', updatePersonalProgress);
+            document.getElementById('modal-profesor').addEventListener('input', updatePersonalProgress);
+            document.getElementById('modal-calificacion').addEventListener('input', updatePersonalProgress);
+
+            // Mostrar/ocultar el menú de filtros
+            document.getElementById('filter-btn').addEventListener('click', (e) => {
+                e.stopPropagation(); // Evitar que el clic se propague y cierre el menú
+                document.getElementById('filter-menu').classList.toggle('hidden');
+            });
+            
+            // Cerrar el menú de filtros al hacer clic en cualquier parte fuera de él
+            document.addEventListener('click', () => {
+                document.getElementById('filter-menu').classList.add('hidden');
+            });
+            
+            // Manejar los clics en las opciones de filtro
+            document.querySelectorAll('#filter-menu a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault(); // Prevenir el comportamiento por defecto del enlace
+                    const filter = e.target.dataset.filter; // Obtener el filtro de datos
+                    filterMaterias(filter); // Aplicar el filtro
+                    document.getElementById('filter-menu').classList.add('hidden'); // Ocultar el menú
+                });
+            });
+            
+            // Cerrar el modal de detalles
+            document.getElementById('close-modal').addEventListener('click', () => {
+                document.getElementById('materia-details').classList.remove('active'); // Ocultar el modal
+                currentMateriaInModal = null; // Limpiar la materia actual del modal
+            });
+        });
+    </script>
+</body>
+</html>
+```
